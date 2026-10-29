@@ -22,22 +22,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root { --bg: #000000; --bg-2: #0F0518; --card: #1A0B2E; --card2: #2A1A4A; --purple: #9D4EDD; --purple-hi: #C77DFF; --purple-deep: #7B2CBF; --purple-pale: #E0AAFF; --grey: #A0A0A0; --grey-dim: #666666; --border: #3A2A5A; --red: #FF3B30; --green: #00C853; }
   
-  /* PORTRAIT LOCK & RESPONSIVE BASE */
-  html, body { 
-    height: 100%; 
-    width: 100%;
-    background: var(--bg); 
-    color: #fff; 
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif; 
-    overflow: hidden; 
-    overscroll-behavior: none; 
-    user-select: none; 
-    -webkit-user-select: none; 
-    -webkit-font-smoothing: antialiased; 
-    touch-action: pan-y; 
-    position: fixed; 
-  }
-  
+  html, body { height: 100%; width: 100%; background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif; overflow: hidden; overscroll-behavior: none; user-select: none; -webkit-user-select: none; -webkit-font-smoothing: antialiased; touch-action: pan-y; position: fixed; }
   body { display: flex; justify-content: center; }
   .app { position: relative; width: 100%; max-width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; background: var(--bg); }
   .screen { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--bg); overflow: hidden; opacity: 0; visibility: hidden; pointer-events: none; }
@@ -606,6 +591,7 @@
       </div>
       
       <div class="settings-list" style="margin-top: 20px;">
+        <div class="setting-row" id="rowNotifications"><span class="s-icon">🔔</span><span class="s-title">Enable Notifications</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowInterests"><span class="s-icon">🎯</span><span class="s-title">Interests</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowBulk" style="display:none;"><span class="s-icon">📋</span><span class="s-title">Bulk Paste (Advanced)</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowViolenceBulk" style="display:none;"><span class="s-icon" style="color: #FF3B30;">🤫</span><span class="s-title">Forbidden Bulk Paste</span><span class="s-arrow">›</span></div>
@@ -727,9 +713,48 @@ async function init() {
     State.userId = (crypto.randomUUID && crypto.randomUUID()) || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { const r = Math.random() * 16 | 0; const v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
     localStorage.setItem('bs_user_id', State.userId);
   }
+  
   setTimeout(async () => {
-    try { const { data: existing } = await sb.from('user_preferences').select('user_id').eq('user_id', State.userId).maybeSingle(); if (!existing) { await sb.from('user_preferences').insert({ user_id: State.userId, categories: State.pickedCats.length > 0 ? State.pickedCats : ['all'], gender: State.gender || null }); } } catch (e) {}
+    try { 
+      const { data: existing } = await sb.from('user_preferences').select('user_id, country').eq('user_id', State.userId).maybeSingle(); 
+      
+      let userCountry = existing?.country || 'Unknown';
+      
+      if (!userCountry || userCountry === 'Unknown') {
+        try {
+          const res = await fetch('https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/get_user_info', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer sb_publishable_2Yg_zJGs9o5KIue57PjaYw_JVOI5UYE',
+              'Content-Type': 'application/json'
+            }
+          });
+          const data = await res.json();
+          if (data.country && data.country !== 'Unknown') {
+            userCountry = data.country;
+          }
+        } catch (err) {
+          console.log("Country detection failed");
+        }
+      }
+
+      if (!existing) { 
+        await sb.from('user_preferences').insert({ 
+          user_id: State.userId, 
+          categories: State.pickedCats.length > 0 ? State.pickedCats : ['all'], 
+          gender: State.gender || null,
+          country: userCountry,
+          last_seen: new Date().toISOString()
+        }); 
+      } else {
+        await sb.from('user_preferences').update({ 
+          country: userCountry,
+          last_seen: new Date().toISOString()
+        }).eq('user_id', State.userId);
+      }
+    } catch (e) { console.log("Init error", e); }
   }, 2000);
+
   document.getElementById('bottomNav').classList.add('hidden');
   setTimeout(() => {
     if (!State.genderPicked) { go('gender'); document.getElementById('bottomNav').classList.add('hidden'); }
@@ -1604,6 +1629,46 @@ function wireEvents() {
     document.getElementById('adWatchBtn').disabled = false;
     document.getElementById('adWatchBtn').textContent = '▶ View Ad';
     document.getElementById('adWatchBtn').onclick = startAdCountdown;
+  };
+
+  document.getElementById('rowNotifications').onclick = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toast('Notifications not supported on this browser');
+      return;
+    }
+    
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        
+        const urlBase64ToUint8Array = (base64String) => {
+          const padding = '='.repeat((4 - base64String.length % 4) % 4);
+          const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+          const rawData = window.atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+          return outputArray;
+        };
+        
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array('BCjMPgeqNZfwy9NCUyJCR8GduUslhyMm8j88GLFsO0KkfAbKtpocE1zNdjE__jjmwXp-3B56ZFwYH9DnUWmOmKo')
+        });
+
+        await sb.from('user_push_tokens').insert({
+          user_id: State.userId,
+          token: subscription.toJSON()
+        });
+        
+        toast('🔔 Notifications enabled!');
+      } else {
+        toast('Notifications blocked');
+      }
+    } catch (err) {
+      toast('Failed to enable notifications');
+      console.log(err);
+    }
   };
 
   document.getElementById('rowInterests').onclick = () => { go('categories'); renderCategories(); };
