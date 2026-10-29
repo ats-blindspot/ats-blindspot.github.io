@@ -453,8 +453,8 @@
   .nav-item.create-tab .create-circle svg { width: 50%; height: 50%; color: #fff; }
   .nav-item.create-tab .n-label { color: var(--purple-hi); }
 </style>
-</head>
-<body>
+ </head>
+ <body>
 <div class="app" id="app">
 
   <section id="splash" class="screen active">
@@ -1031,10 +1031,9 @@ async function openLayer(cardId, layerIdx) {
          return;
       }
       
-      // Calculate exactly 6:00 AM tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(6, 0, 0, 0); // 6:00 AM
+      tomorrow.setHours(6, 0, 0, 0);
       const unlockTime = tomorrow.getTime();
       
       violenceUnlockQueue.push({ id: cardId, unlockTime: unlockTime, cardData: card });
@@ -1099,7 +1098,6 @@ function closeModal() { document.getElementById('modal').classList.remove('activ
 function startAdCountdown() {
   const btn = document.getElementById('adWatchBtn');
   
-  // Fire the Interstitial Ad (Full screen popup)
   try {
     aclib.runInterstitial({
       zoneId: '12377746',
@@ -1213,21 +1211,13 @@ function toggleSave(cardId) {
 }
 
 function openShare(cardId) { 
-  const card = State.cards.find(c => c.id === cardId);
+  // 🔥 COPY JUST THE MAIN LINK
+  const liveAppLink = 'https://ats-blindspot.github.io/'; 
   
-  // 🔥 THIS AUTOMATICALLY PICKS YOUR CURRENT URL
-  const liveAppLink = window.location.origin + window.location.pathname; 
-  
-  let textToCopy = "";
-  if (card) {
-    textToCopy = `"${card.what}" — Blindspot app\n\nClick here to open Blindspot and see the truth: ${liveAppLink}`;
-  } else {
-    textToCopy = `Check out Blindspot app! ${liveAppLink}`;
-  }
-
-  copyToClipboard(textToCopy);
+  copyToClipboard(liveAppLink);
   haptic(20);
 
+  const card = State.cards.find(c => c.id === cardId);
   if (card) {
     sb.from('user_behavior').insert({ 
       user_id: State.userId, card_id: card.id, category: card.cat, action: 'share', weight: 5 
@@ -1686,4 +1676,4 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>
- </html>
+           </html>
