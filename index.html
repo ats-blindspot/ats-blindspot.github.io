@@ -178,6 +178,13 @@
   @keyframes swipeHandMove { 0%, 100% { transform: translateY(30px); opacity: 0.5; } 50% { transform: translateY(-30px); opacity: 1; } }
   .swipe-onboard-sub { font-size: clamp(12px, 3.5vw, 14px); color: var(--purple-hi); font-weight: 600; letter-spacing: 0.5px; animation: swipeTextPulse 1.5s ease-in-out infinite; animation-delay: 0.3s; }
 
+  /* TIKTOK LOADER */
+  .tiktok-loader { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: none; gap: 6px; z-index: 100; background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 20px; align-items: center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .tiktok-loader.active { display: flex; }
+  .tiktok-dot { width: 8px; height: 8px; background: var(--purple-hi); border-radius: 50%; animation: tiktokSpin 1s infinite alternate; }
+  .tiktok-dot:nth-child(2) { animation-delay: 0.3s; }
+  @keyframes tiktokSpin { 0% { transform: scale(0.5); opacity: 0.3; } 100% { transform: scale(1.2); opacity: 1; } }
+
   /* SEARCH & FORGE */
   #search { padding-bottom: 88px; }
   .search-top { margin: 2vh 4vw 1vh; height: 52px; background: var(--card); border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; padding: 0 4vw; gap: 2vw; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(199,125,255,0.08); transition: 0.3s; }
@@ -267,10 +274,6 @@
   .profile-name { font-size: clamp(18px, 5.5vw, 20px); font-weight: 800; }
   .profile-country { font-size: clamp(13px, 3.8vw, 15px); color: var(--grey); display: none; }
   .profile-title { display: none; margin-top: 0.5vh; font-size: clamp(11px, 3.5vw, 13px); color: var(--purple-hi); font-weight: 700; }
-  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2vw; padding: 0 4vw 2vh; }
-  .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 2vh 2vw; text-align: center; box-shadow: inset 0 1px 0 rgba(199,125,255,0.08); }
-  .stat-num { font-size: clamp(18px, 5.5vw, 22px); font-weight: 800; color: var(--purple-hi); text-shadow: 0 0 10px rgba(199,125,255,0.5); }
-  .stat-lbl { font-size: clamp(8px, 2.5vw, 10px); color: var(--grey); margin-top: 0.5vh; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 700; }
   .settings-list { margin: 1vh 4vw; background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: inset 0 1px 0 rgba(199,125,255,0.08); }
   .setting-row { display: flex; align-items: center; gap: 3vw; padding: 2vh 4vw; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
   .setting-row:last-child { border-bottom: none; }
@@ -298,7 +301,7 @@
   .modal-next { margin-top: 2vh; height: 52px; border-radius: 30px; background: linear-gradient(135deg, var(--purple), var(--purple-deep)); border: none; color: #fff; font-weight: 800; font-size: clamp(13px, 3.8vw, 15px); letter-spacing: 0.5px; box-shadow: 0 0 25px rgba(157,78,221,0.6), inset 0 1px 0 rgba(199,125,255,0.4); cursor: pointer; transition: 0.2s; position: relative; z-index: 1; }
   .modal-next:active { transform: scale(0.96); box-shadow: 0 0 35px rgba(157,78,221,1); }
 
-  .ad-popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 4vw; backdrop-filter: blur(8px); }
+  .ad-popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 4vw; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
   .ad-popup-overlay.active { display: flex; }
   .ad-popup { background: linear-gradient(180deg, var(--card) 0%, var(--bg-2) 100%); border: 1.5px solid var(--purple); border-radius: 28px; box-shadow: 0 0 50px rgba(157,78,221,0.7); padding: 4vh 4vw; text-align: center; max-width: 90vw; width: 100%; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
   @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -315,7 +318,7 @@
   .share-sheet { width: 100%; max-width: 90vw; background: var(--card); border-radius: 28px 28px 0 0; border-top: 1.5px solid var(--purple); padding: 4vw; animation: sheetUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
   .share-head { font-size: clamp(15px, 4.5vw, 17px); font-weight: 800; margin-bottom: 3vh; text-align: center; }
   .share-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vw; margin-bottom: 2vh; }
-  .share-opt { display: flex; flex-direction: column; align-items: center; gap: 1.5vh; cursor: pointer; padding: 2vh 1vw; border-radius: 14px; background: var(--card2); border: 1px solid var(--border); transition: 0.25s; font-size: clamp(9px, 2.8vw, 11px); color: #fff; font-weight: 600; }
+  .share-opt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5vh; cursor: pointer; padding: 2vh 1vw; border-radius: 14px; background: var(--card2); border: 1px solid var(--border); transition: 0.25s; font-size: clamp(9px, 2.8vw, 11px); color: #fff; font-weight: 600; height: 100%; }
   .share-opt:active { transform: scale(0.94); border-color: var(--purple); box-shadow: 0 0 20px rgba(157,78,221,0.6); }
   .share-emoji { font-size: clamp(22px, 7vw, 26px); }
   .share-cancel { width: 100%; height: 48px; background: transparent; border: 1px solid var(--border); border-radius: 24px; color: var(--grey); font-size: clamp(12px, 3.5vw, 14px); font-weight: 600; cursor: pointer; transition: 0.2s; }
@@ -516,6 +519,10 @@
   </section>
 
   <section id="feed" class="screen">
+    <div class="tiktok-loader" id="tiktokLoader">
+      <div class="tiktok-dot"></div>
+      <div class="tiktok-dot"></div>
+    </div>
     <div class="feed-swipe" id="feedSwipe"></div>
     <div class="swipe-onboard" id="swipeOnboard">
       <div class="swipe-onboard-text">SWIPE UP</div>
@@ -580,13 +587,13 @@
   </section>
 
   <section id="violencePaste" class="screen">
-    <div class="bulk-header"><div class="bulk-back" onclick="switchTab('profile')">←</div><div class="bulk-title">Violence Spots</div><div class="bulk-badge" style="color: #FF3B30; border-color: rgba(255,59,48,0.5); background: rgba(255,59,48,0.1);">LOCKED</div></div>
+    <div class="bulk-header"><div class="bulk-back" onclick="switchTab('profile')">←</div><div class="bulk-title">Forbidden Truths</div><div class="bulk-badge" style="color: #FF3B30; border-color: rgba(255,59,48,0.5); background: rgba(255,59,48,0.1);">LOCKED</div></div>
     <div class="bulk-body">
-      <div class="bulk-instructions" style="background: rgba(255,59,48,0.08); border-color: rgba(255,59,48,0.3); color: #FF6B60;">⚠️ <b>Warning:</b> These spots are locked automatically. When a user taps to view the truth, a countdown popup will appear, and the spot will only unlock the next morning at 6:00 AM.</div>
-      <textarea class="bulk-textarea" id="bulkViolenceTextarea" placeholder="---SPOT---&#10;SpotName: Why He Will Stab You At 12PM&#10;Category: dark_psychology&#10;Author: John&#10;Hook: ...&#10;Twist: ...&#10;Layer1: ...&#10;Layer2: ...&#10;Layer3: ...&#10;Layer4: ...&#10;Funny: ..."></textarea>
+      <div class="bulk-instructions" style="background: rgba(255,59,48,0.08); border-color: rgba(255,59,48,0.3); color: #FF6B60;">⚠️ <b>Warning:</b> These spots are locked automatically. When a user taps to view the truth, a countdown popup will appear, and the spot will only unlock at 6:00 AM the next morning.</div>
+      <textarea class="bulk-textarea" id="bulkViolenceTextarea" placeholder="---SPOT---&#10;SpotName: The Forbidden Truth&#10;Category: dark_psychology&#10;Author: John&#10;Hook: ...&#10;Twist: ...&#10;Layer1: ...&#10;Layer2: ...&#10;Layer3: ...&#10;Layer4: ...&#10;Funny: ..."></textarea>
       <div class="bulk-progress-box" id="violenceProgressBox"><div class="bulk-progress-label" id="violenceProgressLabel">Publishing...</div><div class="bulk-progress-bar"><div class="bulk-progress-fill" id="violenceProgressFill"></div></div><div class="bulk-progress-stats"><span id="violenceProgressCurrent">0</span><span id="violenceProgressTotal">0</span></div></div>
       <div class="bulk-result" id="violenceResult"></div>
-      <button class="bulk-btn-publish" id="violencePublishBtn" onclick="publishViolenceBulk()" style="background: linear-gradient(135deg, #FF3B30, #8B0000); box-shadow: 0 0 25px rgba(255,59,48,0.7);">🚀 Publish Violence Spots</button>
+      <button class="bulk-btn-publish" id="violencePublishBtn" onclick="publishViolenceBulk()" style="background: linear-gradient(135deg, #FF3B30, #8B0000); box-shadow: 0 0 25px rgba(255,59,48,0.7);">🚀 Publish Forbidden Truths</button>
     </div>
   </section>
 
@@ -597,10 +604,11 @@
         <div class="profile-name" id="profileName">User</div>
         <div class="profile-title" id="profileTitle"></div>
       </div>
+      
       <div class="settings-list" style="margin-top: 20px;">
         <div class="setting-row" id="rowInterests"><span class="s-icon">🎯</span><span class="s-title">Interests</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowBulk" style="display:none;"><span class="s-icon">📋</span><span class="s-title">Bulk Paste (Advanced)</span><span class="s-arrow">›</span></div>
-        <div class="setting-row" id="rowViolenceBulk" style="display:none;"><span class="s-icon" style="color: #FF3B30;">🩸</span><span class="s-title">Violence Bulk Paste</span><span class="s-arrow">›</span></div>
+        <div class="setting-row" id="rowViolenceBulk" style="display:none;"><span class="s-icon" style="color: #FF3B30;">🤫</span><span class="s-title">Forbidden Bulk Paste</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowPrivacy"><span class="s-icon">🔒</span><span class="s-title">Privacy Policy</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowTerms"><span class="s-icon">📄</span><span class="s-title">Terms</span><span class="s-arrow">›</span></div>
         <div class="setting-row" id="rowAbout"><span class="s-icon">ℹ️</span><span class="s-title">About</span><span class="s-arrow">›</span></div>
@@ -626,9 +634,30 @@
 
   <div class="modal-overlay" id="modal"><div class="modal-sheet"><div class="modal-head"><button class="modal-close" id="modalClose">✕</button><div class="modal-title" id="modalTitle">The Secret Truth</div></div><div class="modal-body" id="modalBody"></div><button class="modal-next" id="modalNext">Next Layer →</button></div></div>
 
-  <div class="ad-popup-overlay" id="adPopup"><div class="ad-popup"><div class="ad-lock-icon">🔒</div><h3>Unlock this truth</h3><p>Watch a short video. Learn what nobody will tell you.</p><div class="ad-duration">⏱ 15 SECONDS</div><button class="ad-watch-btn" id="adWatchBtn" onclick="completeAd()">▶ Watch Video</button><button class="ad-cancel-btn" id="adCancelBtn">Cancel</button></div></div>
+  <div class="ad-popup-overlay" id="adPopup">
+    <div class="ad-popup">
+      <div class="ad-lock-icon">🔒</div>
+      <h3>Unlock this truth</h3>
+      <p>View this short ad to reveal what nobody will tell you.</p>
+      <div class="ad-duration">⏱ 10 SECONDS</div>
+      <button class="ad-watch-btn" id="adWatchBtn" onclick="startAdCountdown()">▶ View Ad</button>
+      <button class="ad-cancel-btn" id="adCancelBtn">Cancel</button>
+    </div>
+  </div>
 
-  <div class="modal-overlay" id="shareModal"><div class="share-sheet"><button class="modal-close" onclick="closeShare()" style="position: absolute; top: 16px; right: 16px; z-index: 10;">✕</button><div class="share-head" style="margin-top: 10px;">Share this blindspot</div><div class="share-grid"><div class="share-opt" data-platform="native"><span class="share-emoji">📤</span><span>Share</span></div><div class="share-opt" data-platform="whatsapp"><span class="share-emoji">💬</span><span>WhatsApp</span></div><div class="share-opt" data-platform="facebook"><span class="share-emoji">📘</span><span>Facebook</span></div><div class="share-opt" data-platform="telegram"><span class="share-emoji">✈️</span><span>Telegram</span></div><div class="share-opt" data-platform="twitter"><span class="share-emoji">🐦</span><span>Twitter</span></div><div class="share-opt" data-platform="copy"><span class="share-emoji">🔗</span><span>Copy</span></div></div><button class="share-cancel" id="shareCancel" onclick="closeShare()">Cancel</button></div></div>
+  <!-- FORBIDDEN TRUTH LOCK POPUP -->
+  <div class="ad-popup-overlay" id="violencePopup">
+    <div class="ad-popup" style="border-color: #9D4EDD; box-shadow: 0 0 50px rgba(157,78,221,0.4);">
+      <div class="ad-lock-icon" style="filter: drop-shadow(0 0 20px #9D4EDD);">🤫</div>
+      <h3 style="color: #C77DFF; font-size: 22px;">The Forbidden Truth</h3>
+      <p style="font-weight: 500; color: #D0D0D0;">You found it. But this truth is too deep to reveal today.</p>
+      <p style="font-size: 11px; color: #A0A0A0; margin-top: 8px;">It will unlock at 6:00 AM tomorrow.</p>
+      
+      <div class="ad-duration" style="color: #E0AAFF; margin: 3vh 0; font-size: 15px; font-weight: 900; letter-spacing: 1px;" id="violenceCountdown">Calculating...</div>
+      
+      <button class="ad-watch-btn" style="background: linear-gradient(135deg, #9D4EDD, #7B2CBF); box-shadow: 0 0 25px rgba(157,78,221,0.7);" onclick="closeViolencePopup()">I'll wait</button>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="logoutModal"><div class="confirm-dialog"><div class="confirm-icon">⚠️</div><div class="confirm-title">Logout & Delete Data?</div><div class="confirm-text"><p>Here's what will happen:</p><ul><li>Your gender — gone</li><li>Your picked categories — gone</li><li>Your saved cards — gone</li><li>Your blindspot history — gone</li><li>Daily notifications — stopped</li><li>All your data — permanently deleted</li></ul><p class="confirm-warn">This cannot be undone.</p></div><div class="confirm-actions"><button class="btn-danger" id="logoutConfirm">Yes, Delete Everything</button><button class="btn-outline" id="logoutCancel">Cancel</button></div></div></div>
 
@@ -660,6 +689,8 @@ const CATEGORIES = [
   { id: 'dating', name: 'Dating', emoji: '💘' }, { id: 'attachment', name: 'Attachment', emoji: '🪢' }, { id: 'heartbreak', name: 'Heartbreak', emoji: '💔' }, { id: 'love', name: 'Love', emoji: '❤️' }, { id: 'relationship', name: 'Relationship', emoji: '💞' }, { id: 'intimacy', name: 'Intimacy', emoji: '🫂' }, { id: 'marriage', name: 'Marriage', emoji: '💍' }, { id: 'health', name: 'Health', emoji: '🩺' }, { id: 'money', name: 'Money', emoji: '💰' }, { id: 'business', name: 'Business', emoji: '💼' }, { id: 'travel', name: 'Travel', emoji: '✈️' }, { id: 'tech', name: 'Tech', emoji: '💻' }, { id: 'dark_psychology', name: 'Dark Psychology', emoji: '🧠' }, { id: 'confidence', name: 'Confidence', emoji: '🦁' }, { id: 'social_skills', name: 'Social Skills', emoji: '🗣️' }, { id: 'family_trauma', name: 'Family Trauma', emoji: '🏚️' }
 ];
 
+let violenceUnlockQueue = JSON.parse(localStorage.getItem('bs_violence_queue') || '[]');
+
 const State = {
   userId: null, pickedCats: [], saved: [], seen: 0, blown: 0,
   gender: null, genderPicked: false,
@@ -670,8 +701,7 @@ const State = {
   editingSpotId: null, editingSpotData: null,
   selectMode: false, selectedSpotIds: [],
   deepLinkCardId: null,
-  _pendingViolenceUnlock: null,
-  _pendingViolenceLayer: null
+  isViolenceAd: false
 };
 
 let swipeInitialized = false;
@@ -679,7 +709,6 @@ let searchTimeout = null;
 let adTimerInterval = null;
 
 async function init() {
-  // FORCE PORTRAIT
   if (screen.orientation && screen.orientation.lock) {
     screen.orientation.lock('portrait').catch(e => console.log('Orientation lock failed:', e));
   }
@@ -774,7 +803,7 @@ async function loadFeed() {
   if (State.isFetching) return;
   State.isFetching = true;
   try {
-    const cards = [];
+    let cards = [];
     if (State.deepLinkCardId) {
       try {
         let { data: card } = await sb.from('blindspots').select('*').eq('id', State.deepLinkCardId).single();
@@ -784,6 +813,18 @@ async function loadFeed() {
       State.deepLinkCardId = null;
     }
     for (let i = 0; i < 5; i++) { try { const card = await fetchCardFromBackend(); if (card) cards.push(card); } catch (e) { break; } }
+    
+    const now = Date.now();
+    const readyViolence = violenceUnlockQueue.filter(q => now >= q.unlockTime);
+    
+    if (readyViolence.length > 0) {
+      readyViolence.forEach(v => {
+        cards = cards.filter(c => c.id !== v.id);
+        cards.unshift(v.cardData);
+      });
+      toast('🤫 A Forbidden Truth is ready to be seen!');
+    }
+
     if (cards.length === 0) { State.isFetching = false; showFeedError(feed); return; }
     
     if (cards.length > 0) { cards[0].is_daily_drop = true; }
@@ -858,7 +899,7 @@ function buildFeedCard(card) {
       <div style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--grey); font-weight:700; margin-right: 8px;">
          <span>${reactions.share || 0}</span>
       </div>
-      <svg class="feed-action" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="openShare('${card.id}')"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <svg class="feed-action" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="openShare('${card.id}')"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
     </div>
   </div>`;
 }
@@ -874,26 +915,85 @@ function bindSwipe() {
 }
 
 function swapSlideClasses() {
-  const feed = document.getElementById('feedSwipe'); const slides = feed.querySelectorAll('.slide');
-  slides.forEach(slide => { const idx = parseInt(slide.dataset.idx); slide.classList.remove('active', 'prev', 'next', 'dragging'); slide.style.transform = ''; slide.style.opacity = ''; if (idx === State.currentFeedIdx) slide.classList.add('active'); else if (idx < State.currentFeedIdx) slide.classList.add('prev'); else slide.classList.add('next'); });
-  const hasPrev = feed.querySelector('.slide.prev'); const needsPrev = State.currentFeedIdx - 1 >= 0;
-  if (needsPrev && !hasPrev) { renderFeed(); return; }
-  const hasNext = feed.querySelector('.slide.next'); const needsNext = State.currentFeedIdx + 1 < State.cards.length;
-  if (needsNext && !hasNext) { renderFeed(); }
+  const feed = document.getElementById('feedSwipe'); 
+  const slides = feed.querySelectorAll('.slide');
+  
+  slides.forEach(slide => {
+    const idx = parseInt(slide.dataset.idx);
+    slide.classList.remove('active', 'prev', 'next', 'dragging');
+    slide.style.transform = ''; 
+    slide.style.opacity = '';
+    
+    if (idx === State.currentFeedIdx) slide.classList.add('active');
+    else if (idx < State.currentFeedIdx) slide.classList.add('prev');
+    else slide.classList.add('next');
+  });
+
+  const wantPrev = State.currentFeedIdx - 1;
+  const wantNext = State.currentFeedIdx + 1;
+  const havePrev = [...slides].some(s => +s.dataset.idx === wantPrev);
+  const haveNext = [...slides].some(s => +s.dataset.idx === wantNext);
+  
+  if ((wantPrev >= 0 && !havePrev) || (wantNext < State.cards.length && !haveNext)) {
+    renderFeed();
+  }
 }
 
 async function nextSlide() {
   if (!State.previousCards) State.previousCards = [];
-  if (State.cards[State.currentFeedIdx]) { State.previousCards.push(State.cards[State.currentFeedIdx]); if (State.previousCards.length > 10) State.previousCards.shift(); }
-  if (State.currentFeedIdx < State.cards.length - 1) { State.currentFeedIdx++; haptic(15); incrementSeen(); registerSwipeForOnboard(); swapSlideClasses(); if (State.cards.length - State.currentFeedIdx < 3) fetchMoreCardsInBackground(); return; }
+  if (State.cards[State.currentFeedIdx]) { 
+    State.previousCards.push(State.cards[State.currentFeedIdx]); 
+    if (State.previousCards.length > 10) State.previousCards.shift(); 
+  }
+  
+  if (State.currentFeedIdx < State.cards.length - 1) { 
+    State.currentFeedIdx++; haptic(15); incrementSeen(); registerSwipeForOnboard(); 
+    swapSlideClasses(); 
+    if (State.cards.length - State.currentFeedIdx < 3) fetchMoreCardsInBackground(); 
+    return; 
+  }
+  
   haptic(15); incrementSeen(); registerSwipeForOnboard();
-  const feed = document.getElementById('feedSwipe'); feed.innerHTML = `<div class="feed-loading" style="position:absolute;inset:0;background:transparent;"><div class="feed-loading-spinner"></div></div>`;
-  try { const card = await fetchCardFromBackend(); if (card) { State.cards.push(card); State.currentFeedIdx++; renderFeed(); } else { const prevCard = State.previousCards.pop(); if (prevCard) { State.cards = [prevCard]; State.currentFeedIdx = 0; renderFeed(); } toast('Network issue. Try again.'); } } catch (err) { const prevCard = State.previousCards.pop(); if (prevCard) { State.cards = [prevCard]; State.currentFeedIdx = 0; renderFeed(); } else loadFeed(); }
+  
+  document.getElementById('tiktokLoader').classList.add('active');
+  
+  try { 
+    const card = await fetchCardFromBackend(); 
+    if (card) { 
+      State.cards.push(card); 
+      State.currentFeedIdx++; 
+      renderFeed(); 
+    } else { 
+      const prevCard = State.previousCards.pop(); 
+      if (prevCard) { State.cards = [prevCard]; State.currentFeedIdx = 0; renderFeed(); } 
+      toast('Network issue. Try again.'); 
+    } 
+  } catch (err) { 
+    const prevCard = State.previousCards.pop(); 
+    if (prevCard) { State.cards = [prevCard]; State.currentFeedIdx = 0; renderFeed(); } 
+    else loadFeed(); 
+  }
+  
+  document.getElementById('tiktokLoader').classList.remove('active');
 }
 
 async function fetchMoreCardsInBackground() {
-  if (State.isFetching) return; State.isFetching = true;
-  try { const newCards = []; for (let i = 0; i < 5; i++) { try { const card = await fetchCardFromBackend(); if (card) newCards.push(card); } catch (e) { break; } } if (newCards.length > 0) State.cards = State.cards.concat(newCards); } catch (err) {}
+  if (State.isFetching) return; 
+  State.isFetching = true;
+  const knownIds = new Set(State.cards.map(c => c.id));
+  const newCards = [];
+  try { 
+    for (let i = 0; i < 5; i++) { 
+      try { 
+        const card = await fetchCardFromBackend(); 
+        if (card && !knownIds.has(card.id)) { 
+          knownIds.add(card.id);
+          newCards.push(card); 
+        } 
+      } catch (e) { break; } 
+    } 
+    if (newCards.length > 0) State.cards = State.cards.concat(newCards); 
+  } catch (err) {}
   State.isFetching = false;
 }
 
@@ -904,16 +1004,83 @@ function hideSwipeOnboard() { const o = document.getElementById('swipeOnboard');
 function registerSwipeForOnboard() { if (localStorage.getItem('bs_onboard_done') === 'true') return; let count = parseInt(localStorage.getItem('bs_onboard_count') || '0'); count++; localStorage.setItem('bs_onboard_count', count.toString()); if (count >= 2) hideSwipeOnboard(); }
 
 async function openLayer(cardId, layerIdx) {
-  const card = State.cards.find(c => c.id === cardId); if (!card) return;
+  const card = State.cards.find(c => c.id === cardId); 
+  if (!card) return;
+  
+  State.currentCard = card;
+  State.currentLayerIdx = layerIdx;
+
+  if (card.is_daily_locked) {
+    const now = Date.now();
+    const queueItem = violenceUnlockQueue.find(q => q.id === cardId);
+    
+    if (queueItem) {
+      if (now >= queueItem.unlockTime) {
+        State.isViolenceAd = true; 
+        document.getElementById('adPopup').classList.add('active');
+        haptic(20);
+        return;
+      } else {
+        showViolencePopup(queueItem.unlockTime);
+        return;
+      }
+    } else {
+      const hasActiveViolenceWait = violenceUnlockQueue.length > 0;
+      if (hasActiveViolenceWait) {
+         toast('⏳ You already have a Forbidden Truth waiting for tomorrow!');
+         return;
+      }
+      
+      // Calculate exactly 6:00 AM tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(6, 0, 0, 0); // 6:00 AM
+      const unlockTime = tomorrow.getTime();
+      
+      violenceUnlockQueue.push({ id: cardId, unlockTime: unlockTime, cardData: card });
+      localStorage.setItem('bs_violence_queue', JSON.stringify(violenceUnlockQueue));
+      
+      showViolencePopup(unlockTime);
+      return;
+    }
+  }
+
   const isUnlocked = State.unlockedCards.includes(cardId);
+  
   if (!isUnlocked) { 
-    State.currentCard = card; 
-    State.currentLayerIdx = layerIdx; 
+    State.isViolenceAd = false; 
     document.getElementById('adPopup').classList.add('active'); 
     haptic(20); 
     return; 
   }
+  
   displayLayer(card, layerIdx);
+}
+
+function showViolencePopup(unlockTime) {
+  document.getElementById('violencePopup').classList.add('active');
+  const countdownEl = document.getElementById('violenceCountdown');
+  
+  function updateTimer() {
+    const diff = unlockTime - Date.now();
+    if (diff <= 0) {
+      countdownEl.textContent = "Ready to Unlock!";
+      clearInterval(window.violenceTimer);
+      return;
+    }
+    const hrs = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    countdownEl.textContent = `Unlocks in: ${hrs}h ${mins}m`;
+  }
+  
+  updateTimer();
+  clearInterval(window.violenceTimer);
+  window.violenceTimer = setInterval(updateTimer, 60000);
+}
+
+function closeViolencePopup() {
+  document.getElementById('violencePopup').classList.remove('active');
+  clearInterval(window.violenceTimer);
 }
 
 function displayLayer(card, layerIdx) {
@@ -929,37 +1096,65 @@ function displayLayer(card, layerIdx) {
 function nextLayer() { if (!State.currentCard) return; const next = State.currentLayerIdx + 1; if (next < State.currentCard.layers.length) displayLayer(State.currentCard, next); }
 function closeModal() { document.getElementById('modal').classList.remove('active'); }
 
-function completeAd() {
-  const card = State.currentCard; const layerIdx = State.currentLayerIdx;
-  if (!card) { toast('Error: no card'); return; }
-  if (!card.layers || !card.layers[layerIdx]) { toast('Error: no layer'); return; }
-
-  try {
-    aclib.runInterstitial({ zoneId: '12377746' });
-  } catch(e) { console.log('Ad error:', e); }
-
+function startAdCountdown() {
   const btn = document.getElementById('adWatchBtn');
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '⏱ Unlocking...';
-  btn.style.opacity = '0.7';
+  
+  // Fire the Interstitial Ad (Full screen popup)
+  try {
+    aclib.runInterstitial({
+      zoneId: '12377746',
+    });
+  } catch (e) {
+    console.log("Ad failed to load", e);
+  }
 
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.textContent = originalText;
-    btn.style.opacity = '1';
-    document.getElementById('adPopup').classList.remove('active');
+  let secs = 10;
+  btn.disabled = true;
+  btn.textContent = `⏱ ${secs}s`;
+  
+  clearInterval(adTimerInterval);
+  adTimerInterval = setInterval(() => {
+    secs--;
+    btn.textContent = `⏱ ${secs}s`;
     
+    if (secs <= 0) {
+      clearInterval(adTimerInterval);
+      btn.disabled = false;
+      btn.textContent = '▶ View Ad'; 
+      btn.onclick = startAdCountdown;    
+      
+      completeAd(); 
+    }
+  }, 1000);
+}
+
+function completeAd() {
+  const card = State.currentCard; 
+  const layerIdx = State.currentLayerIdx;
+  const adPopup = document.getElementById('adPopup'); 
+  if (adPopup) adPopup.classList.remove('active');
+  if (!card) return;
+
+  clearInterval(adTimerInterval); 
+
+  if (State.isViolenceAd) {
+    violenceUnlockQueue = violenceUnlockQueue.filter(q => q.id !== card.id);
+    localStorage.setItem('bs_violence_queue', JSON.stringify(violenceUnlockQueue));
+    State.isViolenceAd = false;
+    toast('🤫 Forbidden Truth Unlocked!');
+  } else {
     if (!State.unlockedCards.includes(card.id)) { 
       State.unlockedCards.push(card.id); 
       localStorage.setItem('bs_unlocked', JSON.stringify(State.unlockedCards)); 
     }
-    displayLayer(card, layerIdx); 
-    haptic(30); 
-    toast('✅ Truth unlocked!');
-    sb.from('user_behavior').insert({ user_id: State.userId, card_id: card.id, category: card.cat, action: 'unlock', weight: 10 }).catch(() => {});
-    saveUnlock(card.id);
-  }, 3000);
+    toast('✅ Card Unlocked!');
+  }
+
+  displayLayer(card, layerIdx); 
+  haptic(30); 
+  
+  sb.from('user_behavior').insert({ user_id: State.userId, card_id: card.id, category: card.cat, action: 'unlock', weight: 10 }).catch(() => {});
+  saveUnlock(card.id);
 }
 
 async function saveUnlock(cardId) { try { await sb.from('user_unlocked').insert({ user_id: State.userId, card_id: cardId }); } catch (err) {} }
@@ -978,6 +1173,12 @@ async function react(cardId, type, el) {
   } else {
     card.user_reactions[type] = true;
     card.reactions[type] = (card.reactions[type] || 0) + 1;
+  }
+  
+  if (type === 'blown') {
+    if (!wasActive) State.blown++;
+    else State.blown = Math.max(0, State.blown - 1);
+    localStorage.setItem('bs_blown', State.blown);
   }
   
   if (el) { 
@@ -1011,31 +1212,62 @@ function toggleSave(cardId) {
   renderFeed(); 
 }
 
-let shareCardId = null;
-function openShare(cardId) { shareCardId = cardId; document.getElementById('shareModal').classList.add('active'); haptic(15); }
-function closeShare() { document.getElementById('shareModal').classList.remove('active'); }
-
-function shareTo(platform) {
-  const card = State.cards.find(c => c.id === shareCardId); if (!card) return;
-  const shareUrl = window.location.origin + window.location.pathname;
-  const text = `"${card.what}" — Blindspot app\n\nClick here to open Blindspot and see the truth: ${shareUrl}`;
+function openShare(cardId) { 
+  const card = State.cards.find(c => c.id === cardId);
   
-  sb.from('user_behavior').insert({ user_id: State.userId, card_id: card.id, category: card.cat, action: 'share', weight: 5 }).catch(() => {});
-
-  if (platform === 'native' && navigator.share) {
-    navigator.share({ title: 'Blindspot', text: text, url: shareUrl }).catch(() => {});
-    closeShare();
-    return;
+  // 🔥 THIS AUTOMATICALLY PICKS YOUR CURRENT URL
+  const liveAppLink = window.location.origin + window.location.pathname; 
+  
+  let textToCopy = "";
+  if (card) {
+    textToCopy = `"${card.what}" — Blindspot app\n\nClick here to open Blindspot and see the truth: ${liveAppLink}`;
+  } else {
+    textToCopy = `Check out Blindspot app! ${liveAppLink}`;
   }
 
-  if (platform === 'copy') { navigator.clipboard?.writeText(text).then(() => toast('🔗 Link copied')); }
-  else if (platform === 'whatsapp') { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
-  else if (platform === 'facebook') { window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '&quote=' + encodeURIComponent(card.what), '_blank'); }
-  else if (platform === 'telegram') { window.open('https://t.me/share/url?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(card.what), '_blank'); }
-  else if (platform === 'twitter') { window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank'); }
-  else { navigator.clipboard?.writeText(text).then(() => toast('🔗 Link copied')); }
+  copyToClipboard(textToCopy);
+  haptic(20);
 
-  closeShare();
+  if (card) {
+    sb.from('user_behavior').insert({ 
+      user_id: State.userId, card_id: card.id, category: card.cat, action: 'share', weight: 5 
+    }).catch(() => {});
+  }
+}
+
+function copyToClipboard(text) {
+  if (!text) {
+    toast('Nothing to copy');
+    return;
+  }
+  
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('🔗 Link copied!');
+    }).catch(err => {
+      fallbackCopyTextToClipboard(text);
+    });
+  } else {
+    fallbackCopyTextToClipboard(text);
+  }
+}
+
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.top = "0";
+  textArea.style.left = "0";
+  textArea.style.position = "fixed";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  try {
+    const successful = document.execCommand('copy');
+    if (successful) { toast('🔗 Link copied!'); } 
+    else { toast('Failed to copy'); }
+  } catch (err) { toast('Failed to copy'); }
+  document.body.removeChild(textArea);
 }
 
 const searchInput = document.getElementById('searchInput');
@@ -1258,7 +1490,7 @@ async function publishViolenceBulk() {
     const pct = Math.round(((i + 1) / uniqueSpots.length) * 100); progressFill.style.width = pct + '%'; progressCurrent.textContent = i + 1;
   }
   publishBtn.disabled = false; progressLabel.textContent = 'Done!';
-  if (failCount === 0 && duplicates.length === 0) { resultDiv.className = 'bulk-result active success'; resultDiv.textContent = `✅ All ${successCount} Violence spots published successfully!`; textarea.value = ''; }
+  if (failCount === 0 && duplicates.length === 0) { resultDiv.className = 'bulk-result active success'; resultDiv.textContent = `✅ All ${successCount} Forbidden Truths published successfully!`; textarea.value = ''; }
   else { resultDiv.className = 'bulk-result active error'; let message = `⚠️ ${successCount} published, ${failCount} failed`; if (duplicates.length > 0) message += `, ${duplicates.length} duplicates skipped`; if (errors.length > 0) { message += `\n\n❌ Errors:\n${errors.slice(0, 5).join('\n')}`; } if (successCount > 0) textarea.value = ''; resultDiv.textContent = message; }
 }
 
@@ -1278,9 +1510,12 @@ function parseBulkText(text, defaultViolence = false) {
 }
 
 function renderProfile() { 
-  document.getElementById('statSeen').textContent = State.seen; 
-  document.getElementById('statBlown').textContent = State.blown; 
-  document.getElementById('statSaved').textContent = State.saved.length; 
+  const s = document.getElementById('statSeen');
+  const b = document.getElementById('statBlown');
+  const v = document.getElementById('statSaved');
+  if (s) s.textContent = State.seen;
+  if (b) b.textContent = State.blown;
+  if (v) v.textContent = State.saved.length;
 }
 
 function showLogoutConfirm() { document.getElementById('logoutModal').classList.add('active'); haptic(20); }
@@ -1326,7 +1561,7 @@ async function submitCreateSpot() {
   const layers = [{ icon: "🔍", title: "The Secret Truth", body: l1 }, { icon: "🧠", title: "The Secret Reason", body: l2 }, { icon: "⚠️", title: "The Secret Consequences", body: l3 }, { icon: "✅", title: "The Secret Solution", body: l4 }];
   try {
     let data;
-    if (State.editingSpotId) { const { error } = await sb.from('user_spots').update({ spot_name: spotName, what: what, why: why, layers: layers, funny: funny || null, category: State.csCategory, author_name: author || null, updated_at: new Date().toISOString() }).eq('id', State.editingSpotId).eq('user_id', State.userId); if (error) { document.getElementById('csErrorReason').textContent = error.message || 'Update failed.'; State.csStep = 7; renderCsStep(); return; } data = { approved: true }; }
+    if (State.editingSpotId) { const { error } = await sb.from('user_spots').update({ spot_name: spotName, what: what, why: why, layers: layers, funny: funny || null, category: State.csCategory, author_name: author || null, is_daily_locked: State.editingSpotData?.is_daily_locked || false, updated_at: new Date().toISOString() }).eq('id', State.editingSpotId).eq('user_id', State.userId); if (error) { document.getElementById('csErrorReason').textContent = error.message || 'Update failed.'; State.csStep = 7; renderCsStep(); return; } data = { approved: true }; }
     else { const res = await fetch(CONFIG.CREATE_SPOT_URL, { method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: State.userId, author_name: author || null, spot_name: spotName, hook_style: 'Custom', what: what, why: why, layers: layers, funny: funny || null, category: State.csCategory, is_daily_locked: false }) }); data = await res.json(); }
     if (data.approved) {
       const isEdit = !!State.editingSpotId;
@@ -1372,12 +1607,13 @@ function wireEvents() {
   document.querySelectorAll('.trend-tag').forEach(tag => { tag.onclick = () => { document.getElementById('searchInput').value = tag.dataset.q; doSearch(tag.dataset.q); }; });
   
   document.getElementById('modalClose').onclick = closeModal;
-  document.getElementById('shareCancel').onclick = closeShare;
-  document.querySelectorAll('.share-opt').forEach(opt => { opt.onclick = () => shareTo(opt.dataset.platform); });
   
   document.getElementById('adCancelBtn').onclick = () => { 
     document.getElementById('adPopup').classList.remove('active'); 
-    if (adTimerInterval) { clearInterval(adTimerInterval); }
+    clearInterval(adTimerInterval);
+    document.getElementById('adWatchBtn').disabled = false;
+    document.getElementById('adWatchBtn').textContent = '▶ View Ad';
+    document.getElementById('adWatchBtn').onclick = startAdCountdown;
   };
 
   document.getElementById('rowInterests').onclick = () => { go('categories'); renderCategories(); };
