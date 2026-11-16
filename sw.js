@@ -1,5 +1,7 @@
-const CACHE_NAME = 'blindspot-admin-v1';
+// CHANGE THIS VERSION NUMBER EVERY TIME YOU DEPLOY AN UPDATE (e.g., v1.0.1, v1.0.2)
+const CACHE_NAME = 'blindspot-v1.0.0'; 
 const ASSETS = [
+  './',
   './index.html',
   './admin_manifest.json',
   './icon_192.png',
@@ -8,10 +10,10 @@ const ASSETS = [
 
 // Install Service Worker & Cache Files
 self.addEventListener('install', (e) => {
+  self.skipWaiting(); // Force new service worker to take over immediately
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
-  self.skipWaiting();
 });
 
 // Activate & Clear Old Cache
@@ -21,13 +23,15 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim()) // Tell the new SW to control all open pages
   );
 });
 
 // Fetch from Cache (Offline Support)
 self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('supabase.co')) return;
+  // Ignore Supabase API calls
+  if (e.request.url.includes('supabase.co') || e.request.url.includes('functions/v1')) return;
+  
   e.respondWith(
     caches.match(e.request).then((cached) => {
       return cached || fetch(e.request);
