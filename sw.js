@@ -1,5 +1,5 @@
 // CHANGE THIS VERSION NUMBER EVERY TIME YOU DEPLOY AN UPDATE (e.g., v1.0.2, v1.0.3)
-const CACHE_NAME = 'blindspot-v1.0.1'; 
+const CACHE_NAME = 'blindspot-v1.0.2'; 
 
 const ASSETS = [
   './',
@@ -61,13 +61,3 @@ self.addEventListener('notificationclick', function(event) {
     clients.openWindow('/')
   );
 });
-
-// ============================================
-// --- MONETAG OWN - NO TOUCH AM ---
-// ============================================
-self.options = {
-    "domain": "5gvci.com",
-    "zoneId": 12117463
-}
-self.lary = ""
-importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw')
