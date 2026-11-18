@@ -10,7 +10,7 @@
 <meta name="description" content="Everyone sees your blindspots. Except you." />
 <title>Blindspot</title>
 
-<!-- ADCASH LIBRARY -->
+<!-- ADCASH LIBRARY (If you still need it) -->
 <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
 
 <link rel="manifest" href="./manifest.json" />
@@ -19,10 +19,8 @@
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- VIDEO JS FOR VAST ADS -->
-<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/videojs-vast-vpaid@2.0.0/dist/videojs-vast-vpaid.min.js"></script>
+<!-- GOOGLE IMA SDK FOR ADS -->
+<script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
 
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -454,25 +452,9 @@
   .nav-item.create-tab:active .create-circle { transform: scale(0.9); }
   .nav-item.create-tab .create-circle svg { width: 50%; height: 50%; color: #fff; }
   .nav-item.create-tab .n-label { color: var(--purple-hi); }
-
-  /* TAME HILLTOP PUSH ADS */
-  body > iframe[style*="position: fixed"], 
-  body > div[id^="__"], 
-  body > div[class*="push"], 
-  iframe[style*="z-index: 999999"] {
-      max-width: 280px !important;
-      max-height: 120px !important;
-      bottom: 85px !important;
-      right: 10px !important;
-      left: auto !important;
-      top: auto !important;
-      z-index: 9000 !important; 
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  }
 </style>
- </head>
- <body>
+</head>
+<body>
 <div class="app" id="app">
 
   <section id="splash" class="screen active">
@@ -656,23 +638,22 @@
   <div class="modal-overlay" id="modal"><div class="modal-sheet"><div class="modal-head"><button class="modal-close" id="modalClose">✕</button><div class="modal-title" id="modalTitle">The Secret Truth</div></div><div class="modal-body" id="modalBody"></div><button class="modal-next" id="modalNext">Next Layer →</button></div></div>
 
   <div class="ad-popup-overlay" id="adPopup">
-    <div class="ad-popup">
-      <div class="ad-lock-icon">🔒</div>
-      <h3>Unlock this truth</h3>
-      <p>Watch this short ad to reveal what nobody will tell you.</p>
+    <div class="ad-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; border-radius: 0; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
       
-      <!-- VIDEO PLAYER FOR UNLOCK -->
-      <div style="width: 100%; height: 200px; margin: 15px 0; background: #000; border-radius: 12px; overflow: hidden;">
-        <video id="unlockVideo" class="video-js vjs-default-skin vjs-big-play-centered" controls playsinline style="width: 100%; height: 100%;"></video>
+      <div id="unlockAdUi" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #000; z-index: 9999; display: none;">
+        <video id="unlockVideo" playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
       </div>
 
+      <div class="ad-lock-icon" id="unlockAdIcon">🔒</div>
+      <h3 id="unlockAdTitle">Unlock this truth</h3>
+      <p id="unlockAdDesc">Watch this short ad to reveal what nobody will tell you.</p>
+      
       <div class="ad-duration" id="adTimerText" style="display:none;">⏱ 10 SECONDS</div>
       <button class="ad-watch-btn" id="adWatchBtn" onclick="playUnlockAd()">▶ View Ad & Unlock</button>
       <button class="ad-cancel-btn" id="adCancelBtn">Cancel</button>
     </div>
   </div>
 
-  <!-- FORBIDDEN TRUTH LOCK POPUP -->
   <div class="ad-popup-overlay" id="violencePopup">
     <div class="ad-popup" style="border-color: #9D4EDD; box-shadow: 0 0 50px rgba(157,78,221,0.4);">
       <div class="ad-lock-icon" style="filter: drop-shadow(0 0 20px #9D4EDD);">🤫</div>
@@ -696,7 +677,6 @@
 
   <div class="modal-overlay" id="installModal" style="align-items: center; padding: 20px; z-index: 10005;"><div class="confirm-dialog" style="text-align: center; border-color: var(--purple-hi);"><div class="confirm-icon" style="filter: drop-shadow(0 0 15px var(--purple)); font-size: 56px; margin-bottom: 10px;">📲</div><div class="confirm-title" style="font-size: 22px;">Install Blindspot</div><div class="confirm-text" id="installText" style="text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">Add Blindspot to your home screen for the full app experience.</div><div class="confirm-actions"><button class="btn-primary" id="installBtn" style="width: 100%; margin-top: 0;">Install App</button><button class="btn-outline" onclick="document.getElementById('installModal').classList.remove('active')">Maybe Later</button></div></div></div>
 
-  <!-- CUSTOM SHARE SHEET -->
   <div class="modal-overlay" id="shareModal" style="align-items: flex-end; padding: 0;">
     <div class="share-sheet">
       <div class="share-head">Share Blindspot</div>
@@ -743,7 +723,7 @@ const CONFIG = {
   CREATE_SPOT_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/create_spot',
   UPDATE_LAST_SEEN_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/update_last_seen',
   VIOLENCE_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/violence',
-  VAST_URL: 'https://loyal-product.com/dHmpFmz.dDG_NNvpZVGBUq/wevmP9FuhZNUSlKkgPJT-cL2_Mbjeke5PM/DPEatoNJzaYLyhOyT/kXw/NcQB'
+  VAST_URL: 'https://loyal-product.com/d.m/F/zRdGG/Npv/ZgG/UC/Jevmd9/uYZeUAl/k-PXT-cm2GMUjLkF5fMrDAEctRNezlY/yFOpTCkLwlNKS/ZpsDaUWf1HpJdPDN0Fxq'
 };
 
 const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
@@ -771,10 +751,11 @@ const State = {
 let swipeInitialized = false;
 let searchSwipeInitialized = false;
 let searchTimeout = null;
-let adTimerInterval = null;
-let unlockPlayer = null;
-let feedPlayer = null;
+let feedAdsLoader = null;
+let feedAdsManager = null;
 let feedAdPlaying = false;
+let unlockAdsLoader = null;
+let unlockAdsManager = null;
 
 async function init() {
   if (screen.orientation && screen.orientation.lock) {
@@ -860,28 +841,6 @@ async function init() {
 
   wireEvents();
   bindSwipe();
-  
-  // Initialize Video.js Player for Unlock Ad
-  setTimeout(() => {
-    unlockPlayer = videojs('unlockVideo', {
-      controls: true,
-      autoplay: false,
-      preload: 'auto',
-      fluid: false,
-      playsinline: true,
-      muted: false
-    });
-
-    unlockPlayer.vastClient({
-      adTagUrl: CONFIG.VAST_URL,
-      playAdAlways: true,
-      verbosity: 0,
-      vpaidFlashLoaderPath: 'https://cdn.jsdelivr.net/npm/videojs-vast-vpaid@2.0.0/dist/VPAIDFLASHClient.swf'
-    });
-
-    unlockPlayer.on('vast.adEnded', () => { completeUnlockAd(); });
-    unlockPlayer.on('vast.adError', () => { completeUnlockAd(); });
-  }, 2000);
 
   const todayFormatted = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const privDate = document.getElementById('privacyDate'); const termsDate = document.getElementById('termsDate');
@@ -958,15 +917,12 @@ async function loadFeed() {
     }
     for (let i = 0; i < 5; i++) { try { const card = await fetchCardFromBackend(); if (card) cards.push(card); } catch (e) { break; } }
     
-    // Check backend for ready violence spots
     try {
       const vRes = await fetch(CONFIG.VIOLENCE_URL, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'ready', user_id: State.userId })
       });
       const vData = await vRes.json();
-      
       if (vData.success && vData.cards && vData.cards.length > 0) {
         vData.cards.forEach(vCard => {
           cards = cards.filter(c => c.id !== vCard.id);
@@ -974,15 +930,11 @@ async function loadFeed() {
         });
         toast('🤫 A Forbidden Truth is ready to be seen!');
       }
-    } catch (e) {
-      console.log("Violence check failed", e);
-    }
+    } catch (e) {}
 
     if (cards.length === 0) { State.isFetching = false; showFeedError(feed); return; }
-    
     if (cards.length > 0) { cards[0].is_daily_drop = true; }
 
-    // Inject Ad Cards after every 4 normal cards
     const cardsWithAds = [];
     let realCount = 0;
     let adCount = 0;
@@ -1029,10 +981,7 @@ async function loadUserReactionsFor(cardsArr) {
   try {
     const { data } = await sb.from('user_reactions').select('card_id, reaction_type').eq('user_id', State.userId).in('card_id', ids);
     const map = {};
-    (data || []).forEach(r => {
-      if (!map[r.card_id]) map[r.card_id] = { blown: false, knew: false, love: false };
-      map[r.card_id][r.reaction_type] = true;
-    });
+    (data || []).forEach(r => { if (!map[r.card_id]) map[r.card_id] = { blown: false, knew: false, love: false }; map[r.card_id][r.reaction_type] = true; });
     cardsArr.forEach(card => { if (map[card.id]) card.user_reactions = map[card.id]; });
   } catch (err) {}
 }
@@ -1050,20 +999,20 @@ function renderFeed() {
   }
   const hint = document.createElement('div'); hint.className = 'swipe-hint'; hint.textContent = '↑ swipe for next'; feed.appendChild(hint);
   
-  // Handle Ad Playing/Pausing
   handleFeedAdPlayback();
 }
 
 function buildFeedCard(card) {
   if (card.is_ad) {
     const videoId = 'feedVideo_' + card.id;
-    return `<div class="feed-card" style="justify-content: center; align-items: center;">
-      <div style="position: absolute; top: 15px; left: 15px; background: rgba(157,78,221,0.2); border: 1px solid var(--purple); color: var(--purple-hi); font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; letter-spacing: 1px;">SPONSORED / AD</div>
+    const uiId = 'feedAdUi_' + card.id;
+    return `<div class="feed-card" style="justify-content: center; align-items: center; padding: 0; border: none; background: #000;">
+      <div style="position: absolute; top: 15px; left: 15px; background: rgba(157,78,221,0.2); border: 1px solid var(--purple); color: var(--purple-hi); font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; letter-spacing: 1px; z-index: 10;">SPONSORED / AD</div>
       
-      <div style="width: 100%; height: 250px; background: #000; border-radius: 12px; overflow: hidden; margin-top: 20px;">
-        <video id="${videoId}" class="video-js vjs-default-skin" playsinline muted style="width: 100%; height: 100%;"></video>
+      <div id="${uiId}" class="feed-ad-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10;">
+        <video id="${videoId}" playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
       </div>
-      <p style="color: var(--grey); font-size: 12px; margin-top: 20px;">Swipe up to continue</p>
+      <p style="position: absolute; bottom: 30px; color: var(--grey); font-size: 12px; z-index: 10;">Swipe up to continue</p>
     </div>`;
   }
   
@@ -1119,47 +1068,53 @@ function bindSwipe() {
 
 function handleFeedAdPlayback() {
   const activeCard = State.cards[State.currentFeedIdx];
-  
-  if (activeCard && activeCard.is_ad) {
-    setTimeout(() => {
-      const videoId = 'feedVideo_' + activeCard.id;
-      const videoEl = document.getElementById(videoId);
-      if (!videoEl) return;
-
-      if (feedPlayer && feedPlayer.el().id !== videoId) {
-         feedPlayer.dispose();
-         feedPlayer = null;
-      }
-
-      if (!feedPlayer) {
-        feedPlayer = videojs(videoId, {
-          controls: false, 
-          autoplay: true, 
-          muted: true, 
-          preload: 'auto', 
-          fluid: false,
-          playsinline: true
-        });
-
-        feedPlayer.vastClient({
-          adTagUrl: CONFIG.VAST_URL,
-          playAdAlways: true,
-          verbosity: 0,
-          vpaidFlashLoaderPath: 'https://cdn.jsdelivr.net/npm/videojs-vast-vpaid@2.0.0/dist/VPAIDFLASHClient.swf'
-        });
-      }
-      
-      if (unlockPlayer && !unlockPlayer.paused()) unlockPlayer.pause();
-      
-      feedPlayer.play().catch(e => console.log("Feed ad autoplay blocked", e));
-      feedAdPlaying = true;
-    }, 100);
-  } else {
-    if (feedPlayer && feedAdPlaying) {
-      feedPlayer.pause();
+  if (!activeCard || !activeCard.is_ad) {
+    if (feedAdsManager && feedAdPlaying) {
+      feedAdsManager.pause();
       feedAdPlaying = false;
     }
+    return;
   }
+
+  const videoId = 'feedVideo_' + activeCard.id;
+  const uiId = 'feedAdUi_' + activeCard.id;
+  const videoEl = document.getElementById(videoId);
+  const adContainer = document.getElementById(uiId);
+  if (!videoEl || !adContainer) return;
+
+  if (feedAdsManager) {
+    try { feedAdsManager.destroy(); } catch(e) {}
+    feedAdsManager = null;
+  }
+
+  const adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, videoEl);
+  adDisplayContainer.initialize();
+
+  feedAdsLoader = new google.ima.AdsLoader(adDisplayContainer);
+
+  feedAdsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, (event) => {
+    feedAdsManager = event.getAdsManager(videoEl);
+    feedAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
+      console.log("Feed Ad error:", e.getError());
+    });
+    feedAdsManager.init(adContainer.offsetWidth || window.innerWidth, adContainer.offsetHeight || window.innerHeight, google.ima.ViewMode.NORMAL);
+    feedAdsManager.start();
+  });
+
+  feedAdsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
+    console.log("Feed Loader error:", e.getError());
+  });
+
+  setTimeout(() => {
+    const adsRequest = new google.ima.AdsRequest();
+    adsRequest.adTagUrl = CONFIG.VAST_URL;
+    adsRequest.linearAdSlotWidth = adContainer.offsetWidth || window.innerWidth;
+    adsRequest.linearAdSlotHeight = adContainer.offsetHeight || window.innerHeight;
+    feedAdsLoader.requestAds(adsRequest);
+  }, 100);
+
+  if (unlockAdsManager && !unlockAdsManager.paused()) unlockAdsManager.pause();
+  feedAdPlaying = true;
 }
 
 function swapSlideClasses() {
@@ -1376,58 +1331,75 @@ function closeModal() { document.getElementById('modal').classList.remove('activ
 function playUnlockAd() {
   const btn = document.getElementById('adWatchBtn');
   btn.style.display = 'none';
+  
+  document.getElementById('unlockAdIcon').style.display = 'none';
+  document.getElementById('unlockAdTitle').style.display = 'none';
+  document.getElementById('unlockAdDesc').style.display = 'none';
+  
   const timerText = document.getElementById('adTimerText');
   timerText.style.display = 'block';
   timerText.textContent = '⏱ Loading Ad...';
-  
-  if (feedPlayer && feedAdPlaying) {
-    feedPlayer.pause();
+
+  if (feedAdsManager && feedAdPlaying) {
+    feedAdsManager.pause();
     feedAdPlaying = false;
   }
 
-  if (!unlockPlayer) return;
+  const videoElement = document.getElementById('unlockVideo');
+  const adContainer = document.getElementById('unlockAdUi');
+  
+  adContainer.style.display = 'block';
 
-  unlockPlayer.play().catch(e => {
-    console.log("Ad failed to play", e);
-    timerText.textContent = '⏱ Unlocking...';
-    setTimeout(completeUnlockAd, 3000); 
-  });
+  const adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, videoElement);
+  adDisplayContainer.initialize(); 
 
-  let adTimeout = setTimeout(() => {
-    if (unlockPlayer.currentTime() === 0) {
-      timerText.textContent = '⏱ Unlocking...';
+  const adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+
+  adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, (event) => {
+    const adsManager = event.getAdsManager(videoElement);
+    
+    adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, () => {
       completeUnlockAd();
-    }
-  }, 6000);
+    });
+    
+    adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
+      console.log("Ad error:", e.getError());
+      completeUnlockAd();
+    });
 
-  unlockPlayer.on('timeupdate', () => {
-    const currentTime = unlockPlayer.currentTime();
-    const duration = unlockPlayer.duration();
-    if (duration && !isNaN(duration) && currentTime > 0) {
-      clearTimeout(adTimeout);
-      const remaining = Math.ceil(duration - currentTime);
-      timerText.textContent = `⏱ ${remaining} SECONDS REMAINING`;
-    }
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    adsManager.init(width, height, google.ima.ViewMode.NORMAL);
+    adsManager.start(); 
   });
 
-  unlockPlayer.on('vast.adEnded', () => { clearTimeout(adTimeout); completeUnlockAd(); });
-  unlockPlayer.on('vast.adError', () => { 
-    clearTimeout(adTimeout);
-    timerText.textContent = `⏱ Unlocking...`;
-    setTimeout(completeUnlockAd, 2000); 
+  adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
+    console.log("Loader error:", e.getError());
+    completeUnlockAd();
   });
+
+  const adsRequest = new google.ima.AdsRequest();
+  adsRequest.adTagUrl = CONFIG.VAST_URL;
+  adsRequest.linearAdSlotWidth = window.innerWidth;
+  adsRequest.linearAdSlotHeight = window.innerHeight;
+  
+  adsLoader.requestAds(adsRequest);
 }
 
 function completeUnlockAd() {
   document.getElementById('adPopup').classList.remove('active');
+  
+  document.getElementById('unlockAdUi').style.display = 'none';
+  document.getElementById('unlockAdIcon').style.display = 'block';
+  document.getElementById('unlockAdTitle').style.display = 'block';
+  document.getElementById('unlockAdDesc').style.display = 'block';
   
   const btn = document.getElementById('adWatchBtn');
   btn.style.display = 'flex';
   btn.disabled = false;
   btn.textContent = '▶ View Ad & Unlock';
   document.getElementById('adTimerText').style.display = 'none';
-
-  if (unlockPlayer) unlockPlayer.pause();
 
   const card = State.currentCard;
   const layerIdx = State.currentLayerIdx;
@@ -2129,8 +2101,13 @@ function wireEvents() {
   document.getElementById('adCancelBtn').onclick = () => { 
     document.getElementById('adPopup').classList.remove('active'); 
     State.isViolenceAd = false; 
-    if (unlockPlayer) unlockPlayer.pause();
+    if (unlockAdsManager) unlockAdsManager.pause();
     
+    document.getElementById('unlockAdUi').style.display = 'none';
+    document.getElementById('unlockAdIcon').style.display = 'block';
+    document.getElementById('unlockAdTitle').style.display = 'block';
+    document.getElementById('unlockAdDesc').style.display = 'block';
+
     const btn = document.getElementById('adWatchBtn');
     btn.style.display = 'flex';
     btn.textContent = '▶ View Ad & Unlock';
@@ -2224,33 +2201,9 @@ function formatTime(iso) {
 function haptic(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
 function escapeHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
 
-// Force In-Page Push to stay in the corner
-const adObserver = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    mutation.addedNodes.forEach((node) => {
-      if (node.tagName === 'IFRAME' || (node.tagName === 'DIV' && node.innerHTML.includes('iframe'))) {
-        setTimeout(() => {
-          node.style.setProperty('max-width', '280px', 'important');
-          node.style.setProperty('max-height', '120px', 'important');
-          node.style.setProperty('bottom', '90px', 'important');
-          node.style.setProperty('right', '10px', 'important');
-          node.style.setProperty('left', 'auto', 'important');
-          node.style.setProperty('top', 'auto', 'important');
-          node.style.setProperty('position', 'fixed', 'important');
-          node.style.setProperty('z-index', '9999', 'important');
-          node.style.setProperty('border-radius', '12px', 'important');
-          node.style.setProperty('box-shadow', '0 4px 15px rgba(0,0,0,0.5)', 'important');
-        }, 100);
-      }
-    });
-  });
-});
-
-adObserver.observe(document.body, { childList: true, subtree: true });
-
+// Auto-update logic
 let deferredPrompt;
 
-// AUTO-UPDATE LOGIC FOR SERVICE WORKER
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -2291,20 +2244,6 @@ document.getElementById('installBtn').addEventListener('click', async () => {
 });
 
 document.addEventListener('DOMContentLoaded', init);
-</script>
-
-<!-- HILLTOP IN-PAGE PUSH AD -->
-<script>
-(function(gyywde){
-var d = document,
-    s = d.createElement('script'),
-    l = d.currentScript || d.scripts[d.scripts.length - 1];
-s.settings = gyywde || {};
-s.src = "\/\/massivesalad.com\/bHX\/V.s\/d-Gfl\/0hYDW\/cH\/BeQmU9ZudZdUqlskGPjTecy2yMDjYkb5qMpjIU\/tRNszIYCy\/OnTmk-yIOlQg";
-s.async = true;
-s.referrerPolicy = 'no-referrer-when-downgrade';
-l.parentNode.insertBefore(s, l);
-})({})
 </script>
 
 </body>
