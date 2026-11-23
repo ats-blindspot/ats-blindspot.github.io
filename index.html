@@ -704,7 +704,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co',
   SUPABASE_KEY: 'sb_publishable_2Yg_zJGs9o5KIue57PjaYw_JVOI5UYE',
-  GET_FEED_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/algorithm',
+  GET_FEED_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/alorgthim',
   GENERATE_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/generate',
   CREATE_SPOT_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/create_spot',
   UPDATE_LAST_SEEN_URL: 'https://ukpufxrkezpkjnnqzdem.supabase.co/functions/v1/update_last_seen',
@@ -734,6 +734,16 @@ const State = {
   searchQuery: ''
 };
 
+let swipeInitialized = false;
+let searchSwipeInitialized = false;
+let searchTimeout = null;
+let feedAdsLoader = null;
+let feedAdsManager = null;
+let feedAdPlaying = false;
+let unlockAdsLoader = null;
+let unlockAdsManager = null;
+
+// --- 1. SUPABASE ANONYMOUS AUTH ---
 async function initUserId() {
   try {
     const { data: { session } } = await sb.auth.getSession();
@@ -745,32 +755,24 @@ async function initUserId() {
       State.userId = data.user.id;
     }
     localStorage.setItem('bs_user_id', State.userId);
+    console.log("User ID set:", State.userId);
   } catch (err) {
-    console.error("Auth Error, falling back to local ID:", err);
-    let fallbackId = localStorage.getItem('bs_user_id');
-    if (!fallbackId) {
-      fallbackId = 'fallback_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('bs_user_id', fallbackId);
+    console.error("Auth error, falling back to localStorage:", err);
+    State.userId = localStorage.getItem('bs_user_id');
+    if (!State.userId) {
+      State.userId = (crypto.randomUUID && crypto.randomUUID()) || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { const r = Math.random() * 16 | 0; const v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+      localStorage.setItem('bs_user_id', State.userId);
     }
-    State.userId = fallbackId;
   }
 }
 
-let swipeInitialized = false;
-let searchSwipeInitialized = false;
-let searchTimeout = null;
-let feedAdsLoader = null;
-let feedAdsManager = null;
-let feedAdPlaying = false;
-let unlockAdsLoader = null;
-let unlockAdsManager = null;
-
 async function init() {
-  await initUserId(); // ADDED SUPABASE AUTH HERE
-
   if (screen.orientation && screen.orientation.lock) {
     screen.orientation.lock('portrait').catch(e => console.log('Orientation lock failed:', e));
   }
+
+  // Wait for user ID first
+  await initUserId();
 
   State.pickedCats = JSON.parse(localStorage.getItem('bs_cats') || '[]');
   State.saved = JSON.parse(localStorage.getItem('bs_saved') || '[]');
@@ -814,9 +816,7 @@ async function init() {
           if (data.country && data.country !== 'Unknown') {
             userCountry = data.country;
           }
-        } catch (err) {
-          console.log("Country detection failed");
-        }
+        } catch (err) {}
       }
 
       if (!existing) { 
@@ -833,7 +833,7 @@ async function init() {
           last_seen: new Date().toISOString()
         }).eq('user_id', State.userId);
       }
-    } catch (e) { console.log("Init error", e); }
+    } catch (e) {}
   }, 2000);
 
   document.getElementById('bottomNav').classList.add('hidden');
@@ -850,6 +850,9 @@ async function init() {
   const todayFormatted = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const privDate = document.getElementById('privacyDate'); const termsDate = document.getElementById('termsDate');
   if (privDate) privDate.textContent = todayFormatted; if (termsDate) termsDate.textContent = todayFormatted;
+
+  // Setup Popunder Ads
+  setupPopunderAds();
 }
 
 function go(screenId) {
@@ -920,7 +923,16 @@ async function loadFeed() {
       } catch(e) {}
       State.deepLinkCardId = null;
     }
-    for (let i = 0; i < 5; i++) { try { const card = await fetchCardFromBackend(); if (card) cards.push(card); } catch (e) { break; } }
+    
+    for (let i = 0; i < 5; i++) { 
+      try { 
+        const card = await fetchCardFromBackend(); 
+        if (card) cards.push(card); 
+      } catch (e) { 
+        console.error("Card fetch failed, trying next:", e);
+        continue; 
+      } 
+    }
     
     try {
       const vRes = await fetch(CONFIG.VIOLENCE_URL, {
@@ -933,7 +945,7 @@ async function loadFeed() {
           cards = cards.filter(c => c.id !== vCard.id);
           cards.unshift(vCard);
         });
-        toast('🤫 A Forbidden Truth is ready to view!');
+        toast('🤫 A Forbidden Truth is ready to be seen!');
       }
     } catch (e) {}
 
@@ -967,12 +979,46 @@ function showFeedError(feed) {
 }
 
 async function fetchCardFromBackend() {
-  const res = await fetch(CONFIG.GET_FEED_URL, { method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: State.userId }) });
-  const data = await res.json();
-  if (data.message && data.message.includes('Loading')) { fetch(CONFIG.GENERATE_URL, { method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: State.userId, count: 10 }) }).catch(e => {}); await new Promise(r => setTimeout(r, 2000)); return await fetchCardFromBackend(); }
-  if (data.error) throw new Error(data.error);
-  if (!data.id) throw new Error('No card received');
-  return { id: data.id, cat: data.category, emoji: data.emoji, what: data.what, why: data.why, layers: data.layers, funny: data.funny, author_name: data.author_name || null, source: data.source || 'ai', creator_user_id: data.creator_user_id || null, is_daily_locked: data.is_daily_locked || false, reactions: { blown: data.reaction_blown_count || 0, knew: data.reaction_knew_count || 0, love: data.reaction_love_count || 0, share: data.share_count || 0 }, user_reactions: { blown: false, knew: false, love: false } };
+  try {
+    const res = await fetch(CONFIG.GET_FEED_URL, { 
+      method: 'POST', 
+      headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ user_id: State.userId }) 
+    });
+    
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+    const data = await res.json();
+    console.log("DATA FROM ALGORITHM:", data);
+
+    if (data.message && data.message.includes('Loading')) { 
+      fetch(CONFIG.GENERATE_URL, { method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: State.userId, count: 10 }) }).catch(e => {}); 
+      await new Promise(r => setTimeout(r, 2000)); 
+      return await fetchCardFromBackend(); 
+    }
+    
+    if (data.error) throw new Error(data.error);
+    if (!data.id) throw new Error('No card received');
+
+    return { 
+      id: data.id, 
+      cat: data.category, 
+      emoji: data.emoji, 
+      what: data.what, 
+      why: data.why, 
+      layers: data.layers, 
+      funny: data.funny, 
+      author_name: data.author_name || null, 
+      source: data.source || 'ai', 
+      creator_user_id: data.creator_user_id || null, 
+      is_daily_locked: data.is_daily_locked || false, 
+      reactions: { blown: data.reaction_blown_count || 0, knew: data.reaction_knew_count || 0, love: data.reaction_love_count || 0, share: data.share_count || 0 }, 
+      user_reactions: { blown: false, knew: false, love: false } 
+    };
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
+    throw err;
+  }
 }
 
 async function loadUserReactions(cardIds) {
@@ -1200,7 +1246,7 @@ async function fetchMoreCardsInBackground() {
           knownIds.add(card.id);
           newCards.push(card); 
         } 
-      } catch (e) { break; } 
+      } catch (e) { continue; } 
     } 
     
     if (newCards.length > 0) {
@@ -1865,7 +1911,6 @@ async function confirmBatchDelete() {
       await sb.from('user_reactions').delete().eq('card_id', id);
       await sb.from('user_behavior').delete().eq('card_id', id);
       
-      // Delete from violence queue backend
       fetch(CONFIG.VIOLENCE_URL, {
         method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', user_id: State.userId, card_id: id })
@@ -1905,7 +1950,6 @@ async function confirmDeleteSpot() {
     await sb.from('user_reactions').delete().eq('card_id', spotId);
     await sb.from('user_behavior').delete().eq('card_id', spotId);
 
-    // Delete from violence queue backend
     fetch(CONFIG.VIOLENCE_URL, {
       method: 'POST', headers: { 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'delete', user_id: State.userId, card_id: spotId })
@@ -2206,9 +2250,9 @@ function formatTime(iso) {
 function haptic(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
 function escapeHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
 
-// Auto-update logic
 let deferredPrompt;
 
+// AUTO-UPDATE LOGIC FOR SERVICE WORKER
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -2233,33 +2277,30 @@ function showInstallPopup() {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   if (isStandalone) return;
+  
   if (!localStorage.getItem('bs_install_prompted')) {
     document.getElementById('installModal').classList.add('active');
     localStorage.setItem('bs_install_prompted', 'true');
     
-    if (isIOS) {
-      // VISUAL INSTRUCTIONS FOR IPHONE
+    if (isIOS) { 
       document.getElementById('installText').innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: left; width: 100%;">
-          <div style="display: flex; align-items: center; gap: 12px; background: rgba(157,78,221,0.1); border: 1px solid rgba(157,78,221,0.3); border-radius: 16px; padding: 12px 16px; width: 100%;">
-            <div style="width: 44px; height: 44px; background: #007AFF; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-            </div>
-            <div style="font-size: 14px; color: #fff; font-weight: 700;">Step 1: Tap the <b>Share</b> icon</div>
+        <div style="text-align: left; margin-bottom: 20px;">
+          <p style="margin-bottom: 15px;">Add Blindspot to your home screen:</p>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span style="font-size: 20px;">1️⃣</span> 
+            <span>Tap the Share icon <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#C77DFF" stroke-width="2" style="vertical-align: middle; margin: 0 2px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> below</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 12px; background: rgba(157,78,221,0.1); border: 1px solid rgba(157,78,221,0.3); border-radius: 16px; padding: 12px 16px; width: 100%;">
-            <div style="width: 44px; height: 44px; background: #333; border: 1px solid #555; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            </div>
-            <div style="font-size: 14px; color: #fff; font-weight: 700;">Step 2: Tap <b>Add to Home Screen</b></div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">2️⃣</span> 
+            <span>Tap 'Add to Home Screen' <span style="font-size: 16px;">➕</span></span>
           </div>
         </div>
-      `;
-      document.getElementById('installBtn').textContent = 'Okay, I Understand';
-    } else {
-      // ANDROID
-      document.getElementById('installText').innerHTML = "Add Blindspot to your home screen for the full app experience.";
-      document.getElementById('installBtn').textContent = "Install App";
+      `; 
+      document.getElementById('installBtn').textContent = "Okay, I Understand"; 
+    }
+    else { 
+      document.getElementById('installText').innerHTML = "Add Blindspot to your home screen for the full app experience."; 
+      document.getElementById('installBtn').textContent = "Install App"; 
     }
   }
 }
@@ -2271,53 +2312,48 @@ document.getElementById('installBtn').addEventListener('click', async () => {
   else { toast('Tap the 3 dots (⋮) at the top right, then tap "Add to Home screen"'); document.getElementById('installModal').classList.remove('active'); }
 });
 
-document.addEventListener('DOMContentLoaded', init);
-</script>
-
-<!-- DIRECT LINK POPUNDER SCRIPT (MAX 2 TIMES PER DAY) -->
-<script>
-  window.addEventListener('load', function() {
-    let lastAdTime = 0;
-    const COOLDOWN = 30000; // 30 seconds cooldown
-    const DIRECT_LINK = "https://fluffy-machine.com/b.3CVa0YPF3SpBvvbpmEVYJAZyDb0L3/N/jPQDxBNKzGYL5XLsTxcg2fNADoEa3xN_zaMH";
-
-    function checkAndFireAd() {
-      const today = new Date().toDateString();
-      let adData = JSON.parse(localStorage.getItem('bs_popunder_data') || '{"date": "", "count": 0}');
-
-      // Reset count if na new day
-      if (adData.date !== today) {
-        adData = { date: today, count: 0 };
-        localStorage.setItem('bs_popunder_data', JSON.stringify(adData));
-      }
-
-      // Stop if e don fire 2 times today
-      if (adData.count >= 2) return; 
-
-      const now = Date.now();
-      if (now - lastAdTime > COOLDOWN) {
-        // Open direct link in new tab (works for both iPhone & Android)
-        window.open(DIRECT_LINK, '_blank');
-        
-        adData.count += 1;
-        localStorage.setItem('bs_popunder_data', JSON.stringify(adData));
-        lastAdTime = now;
-        console.log(`Popunder fired. Count: ${adData.count}`);
-      }
+function setupPopunderAds() {
+  let lastPopunderTime = 0;
+  const COOLDOWN_MS = 30000;
+  const MAX_DAILY = 2;
+  
+  function getPopunderData() {
+    const data = JSON.parse(localStorage.getItem('bs_popunder') || '{"date":"","count":0}');
+    const today = new Date().toDateString();
+    if (data.date !== today) {
+      data.date = today;
+      data.count = 0;
     }
+    return data;
+  }
 
-    // Listen for clicks
-    document.body.addEventListener('click', function(e) {
-      // No fire ad if user dey click inside share or install modal
-      if (e.target.closest('#shareModal') || e.target.closest('#installModal')) return;
-      checkAndFireAd();
-    });
+  function triggerPopunder() {
+    const now = Date.now();
+    if (now - lastPopunderTime < COOLDOWN_MS) return;
+    
+    const data = getPopunderData();
+    if (data.count >= MAX_DAILY) return;
 
-    // Listen for swipes (touchend)
-    document.body.addEventListener('touchend', function(e) {
-      checkAndFireAd();
-    });
-  });
+    lastPopunderTime = now;
+    data.count++;
+    localStorage.setItem('bs_popunder', JSON.stringify(data));
+
+    try {
+      const a = document.createElement('a');
+      a.href = "https://fluffy-machine.com/bG3FVH0.PM3/p/vhbJmBVqJzZJDW0b3HNVjdQ/x_Nxz_Y/5zLVTRcI2jN/DeEJ3gNazbM-";
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.click();
+    } catch(e) {
+      console.log("Popunder error:", e);
+    }
+  }
+
+  document.body.addEventListener('click', triggerPopunder);
+  document.body.addEventListener('touchend', triggerPopunder);
+}
+
+document.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>
