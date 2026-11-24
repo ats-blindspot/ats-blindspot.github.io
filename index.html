@@ -19,7 +19,7 @@
 <link rel="apple-touch-icon" href="./icon-192.png" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- GOOGLE IMA SDK FOR ADS -->
+<!-- GOOGLE IMA SDK FOR UNLOCK AD ONLY -->
 <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
 
 <style>
@@ -737,8 +737,6 @@ const State = {
 let swipeInitialized = false;
 let searchSwipeInitialized = false;
 let searchTimeout = null;
-let feedAdsLoader = null;
-let feedAdsManager = null;
 let feedAdPlaying = false;
 let unlockAdsLoader = null;
 let unlockAdsManager = null;
@@ -952,19 +950,7 @@ async function loadFeed() {
     if (cards.length === 0) { State.isFetching = false; showFeedError(feed); return; }
     if (cards.length > 0) { cards[0].is_daily_drop = true; }
 
-    const cardsWithAds = [];
-    let realCount = 0;
-    let adCount = 0;
-    for (const c of cards) {
-      cardsWithAds.push(c);
-      realCount++;
-      if (realCount % 4 === 0) {
-        adCount++;
-        cardsWithAds.push({ id: 'feed_ad_' + adCount + '_' + Date.now(), is_ad: true });
-      }
-    }
-
-    State.cards = cardsWithAds; 
+    State.cards = cards; 
     State.currentFeedIdx = 0; 
     State.isFetching = false;
     await loadUserReactions(cards.map(c => c.id));
@@ -1049,21 +1035,12 @@ function renderFeed() {
     slide.dataset.idx = i; slide.innerHTML = buildFeedCard(card); feed.appendChild(slide);
   }
   const hint = document.createElement('div'); hint.className = 'swipe-hint'; hint.textContent = '↑ swipe for next'; feed.appendChild(hint);
-  
-  handleFeedAdPlayback();
 }
 
 function buildFeedCard(card) {
   if (card.is_ad) {
-    const videoId = 'feedVideo_' + card.id;
-    const uiId = 'feedAdUi_' + card.id;
     return `<div class="feed-card" style="justify-content: center; align-items: center; padding: 0; border: none; background: #000;">
       <div style="position: absolute; top: 15px; left: 15px; background: rgba(157,78,221,0.2); border: 1px solid var(--purple); color: var(--purple-hi); font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; letter-spacing: 1px; z-index: 10;">SPONSORED / AD</div>
-      
-      <div id="${uiId}" class="feed-ad-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10;">
-        <video id="${videoId}" playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-      </div>
-      <p style="position: absolute; bottom: 30px; color: var(--grey); font-size: 12px; z-index: 10;">Swipe up to continue</p>
     </div>`;
   }
   
@@ -1117,57 +1094,6 @@ function bindSwipe() {
   feed.addEventListener('mousedown', start); feed.addEventListener('mousemove', move); feed.addEventListener('mouseup', end); feed.addEventListener('mouseleave', end);
 }
 
-function handleFeedAdPlayback() {
-  const activeCard = State.cards[State.currentFeedIdx];
-  if (!activeCard || !activeCard.is_ad) {
-    if (feedAdsManager && feedAdPlaying) {
-      feedAdsManager.pause();
-      feedAdPlaying = false;
-    }
-    return;
-  }
-
-  const videoId = 'feedVideo_' + activeCard.id;
-  const uiId = 'feedAdUi_' + activeCard.id;
-  const videoEl = document.getElementById(videoId);
-  const adContainer = document.getElementById(uiId);
-  if (!videoEl || !adContainer) return;
-
-  if (feedAdsManager) {
-    try { feedAdsManager.destroy(); } catch(e) {}
-    feedAdsManager = null;
-  }
-
-  const adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, videoEl);
-  adDisplayContainer.initialize();
-
-  feedAdsLoader = new google.ima.AdsLoader(adDisplayContainer);
-
-  feedAdsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, (event) => {
-    feedAdsManager = event.getAdsManager(videoEl);
-    feedAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
-      console.log("Feed Ad error:", e.getError());
-    });
-    feedAdsManager.init(adContainer.offsetWidth || window.innerWidth, adContainer.offsetHeight || window.innerHeight, google.ima.ViewMode.NORMAL);
-    feedAdsManager.start();
-  });
-
-  feedAdsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
-    console.log("Feed Loader error:", e.getError());
-  });
-
-  setTimeout(() => {
-    const adsRequest = new google.ima.AdsRequest();
-    adsRequest.adTagUrl = CONFIG.VAST_URL;
-    adsRequest.linearAdSlotWidth = adContainer.offsetWidth || window.innerWidth;
-    adsRequest.linearAdSlotHeight = adContainer.offsetHeight || window.innerHeight;
-    feedAdsLoader.requestAds(adsRequest);
-  }, 100);
-
-  if (unlockAdsManager && !unlockAdsManager.paused()) unlockAdsManager.pause();
-  feedAdPlaying = true;
-}
-
 function swapSlideClasses() {
   const feed = document.getElementById('feedSwipe'); 
   const slides = feed.querySelectorAll('.slide');
@@ -1190,8 +1116,6 @@ function swapSlideClasses() {
   
   if ((wantPrev >= 0 && !havePrev) || (wantNext < State.cards.length && !haveNext)) {
     renderFeed();
-  } else {
-    handleFeedAdPlayback();
   }
 }
 
@@ -1206,10 +1130,12 @@ async function nextSlide() {
     State.currentFeedIdx++; haptic(15); incrementSeen(); registerSwipeForOnboard(); 
     swapSlideClasses(); 
     if (State.cards.length - State.currentFeedIdx < 3) fetchMoreCardsInBackground(); 
+    showVignetteAd();
     return; 
   }
   
   haptic(15); incrementSeen(); registerSwipeForOnboard();
+  showVignetteAd();
   
   document.getElementById('tiktokLoader').classList.add('active');
   
@@ -1250,19 +1176,7 @@ async function fetchMoreCardsInBackground() {
     } 
     
     if (newCards.length > 0) {
-      let realCount = State.cards.filter(c => !c.is_ad).length;
-      let adCount = State.cards.filter(c => c.is_ad).length;
-      const cardsToAdd = [];
-
-      for (const c of newCards) {
-        cardsToAdd.push(c);
-        realCount++;
-        if (realCount % 4 === 0) {
-          adCount++;
-          cardsToAdd.push({ id: 'feed_ad_' + adCount + '_' + Date.now(), is_ad: true });
-        }
-      }
-      State.cards = State.cards.concat(cardsToAdd); 
+      State.cards = State.cards.concat(newCards); 
     }
   } catch (err) {}
   State.isFetching = false;
@@ -1390,11 +1304,6 @@ function playUnlockAd() {
   const timerText = document.getElementById('adTimerText');
   timerText.style.display = 'block';
   timerText.textContent = '⏱ Loading Ad...';
-
-  if (feedAdsManager && feedAdPlaying) {
-    feedAdsManager.pause();
-    feedAdPlaying = false;
-  }
 
   const videoElement = document.getElementById('unlockVideo');
   const adContainer = document.getElementById('unlockAdUi');
@@ -2250,9 +2159,9 @@ function formatTime(iso) {
 function haptic(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
 function escapeHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
 
+// Auto-update logic
 let deferredPrompt;
 
-// AUTO-UPDATE LOGIC FOR SERVICE WORKER
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -2312,45 +2221,18 @@ document.getElementById('installBtn').addEventListener('click', async () => {
   else { toast('Tap the 3 dots (⋮) at the top right, then tap "Add to Home screen"'); document.getElementById('installModal').classList.remove('active'); }
 });
 
-function setupPopunderAds() {
-  let lastPopunderTime = 0;
-  const COOLDOWN_MS = 30000;
-  const MAX_DAILY = 2;
-  
-  function getPopunderData() {
-    const data = JSON.parse(localStorage.getItem('bs_popunder') || '{"date":"","count":0}');
-    const today = new Date().toDateString();
-    if (data.date !== today) {
-      data.date = today;
-      data.count = 0;
-    }
-    return data;
-  }
+// MONETAG VIGNETTE AD
+let swipeCount = 0;
+let vignetteLoaded = false;
 
-  function triggerPopunder() {
-    const now = Date.now();
-    if (now - lastPopunderTime < COOLDOWN_MS) return;
-    
-    const data = getPopunderData();
-    if (data.count >= MAX_DAILY) return;
-
-    lastPopunderTime = now;
-    data.count++;
-    localStorage.setItem('bs_popunder', JSON.stringify(data));
-
-    try {
-      const a = document.createElement('a');
-      a.href = "https://fluffy-machine.com/bG3FVH0.PM3/p/vhbJmBVqJzZJDW0b3HNVjdQ/x_Nxz_Y/5zLVTRcI2jN/DeEJ3gNazbM-";
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.click();
-    } catch(e) {
-      console.log("Popunder error:", e);
-    }
-  }
-
-  document.body.addEventListener('click', triggerPopunder);
-  document.body.addEventListener('touchend', triggerPopunder);
+function showVignetteAd() {
+  if (vignetteLoaded) return;
+  vignetteLoaded = true;
+  const s = document.createElement('script');
+  s.dataset.zone = '12344249';
+  s.src = 'https://n6wxm.com/vignette.min.js';
+  document.body.appendChild(s);
+  setTimeout(() => { vignetteLoaded = false; }, 30000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
