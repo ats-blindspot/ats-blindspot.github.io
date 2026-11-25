@@ -1130,12 +1130,10 @@ async function nextSlide() {
     State.currentFeedIdx++; haptic(15); incrementSeen(); registerSwipeForOnboard(); 
     swapSlideClasses(); 
     if (State.cards.length - State.currentFeedIdx < 3) fetchMoreCardsInBackground(); 
-    showVignetteAd();
     return; 
   }
   
   haptic(15); incrementSeen(); registerSwipeForOnboard();
-  showVignetteAd();
   
   document.getElementById('tiktokLoader').classList.add('active');
   
@@ -1194,6 +1192,9 @@ async function openLayer(cardId, layerIdx) {
   
   State.currentCard = card;
   State.currentLayerIdx = layerIdx;
+
+  // FIRE VIGNETTE AD HERE
+  showVignetteAd();
 
   if (card.is_daily_locked) {
     try {
@@ -1389,38 +1390,49 @@ function completeUnlockAd() {
 
 async function saveUnlock(cardId) { try { await sb.from('user_unlocked').insert({ user_id: State.userId, card_id: cardId }); } catch (err) {} }
 
+// REACTION FIX (GLOBAL & NO FAKE COUNTS)
 async function react(cardId, type, el) {
   haptic(20);
-  const card = State.cards.find(c => c.id === cardId); if (!card) return;
+  const card = State.cards.find(c => c.id === cardId) || (State.searchCards && State.searchCards.find(c => c.id === cardId));
+  if (!card) return;
   if (!card.user_reactions) card.user_reactions = { blown: false, knew: false, love: false };
   if (!card.reactions) card.reactions = { blown: 0, knew: 0, love: 0, share: 0 };
   
   const wasActive = card.user_reactions[type];
-  
-  if (wasActive) {
-    card.user_reactions[type] = false;
-    card.reactions[type] = Math.max(0, (card.reactions[type] || 1) - 1);
-  } else {
-    card.user_reactions[type] = true;
-    card.reactions[type] = (card.reactions[type] || 0) + 1;
-  }
-  
-  if (type === 'blown') {
-    if (!wasActive) State.blown++;
-    else State.blown = Math.max(0, State.blown - 1);
-    localStorage.setItem('bs_blown', State.blown);
-  }
-  
-  if (el) { 
-    el.classList.toggle('active', card.user_reactions[type]); 
-    const s = el.querySelector('.r-count'); 
-    if (s) s.textContent = card.reactions[type]; 
-  }
-  
-  if (wasActive) { 
-    sb.from('user_reactions').delete().eq('user_id', State.userId).eq('card_id', cardId).eq('reaction_type', type).then(() => {}).catch(() => {}); 
-  } else { 
-    sb.from('user_reactions').insert({ user_id: State.userId, card_id: cardId, reaction_type: type, category: card.cat || 'Discover' }).then(() => {}).catch(() => {}); 
+  const action = wasActive ? 'remove' : 'add';
+
+  try {
+    if (action === 'add') {
+      const { data, error } = await sb.from('user_reactions').insert({ user_id: State.userId, card_id: cardId, reaction_type: type, category: card.cat || 'Discover' }).select();
+      if (error) throw error;
+      
+      // Update local UI only after DB success
+      card.user_reactions[type] = true;
+      card.reactions[type] = (card.reactions[type] || 0) + 1;
+      if (el) { 
+        el.classList.add('active'); 
+        const s = el.querySelector('.r-count'); 
+        if (s) s.textContent = card.reactions[type]; 
+      }
+      if (type === 'blown') { State.blown++; localStorage.setItem('bs_blown', State.blown); }
+      
+    } else {
+      const { error } = await sb.from('user_reactions').delete().eq('user_id', State.userId).eq('card_id', cardId).eq('reaction_type', type);
+      if (error) throw error;
+      
+      // Update local UI only after DB success
+      card.user_reactions[type] = false;
+      card.reactions[type] = Math.max(0, (card.reactions[type] || 1) - 1);
+      if (el) { 
+        el.classList.remove('active'); 
+        const s = el.querySelector('.r-count'); 
+        if (s) s.textContent = card.reactions[type]; 
+      }
+      if (type === 'blown') { State.blown = Math.max(0, State.blown - 1); localStorage.setItem('bs_blown', State.blown); }
+    }
+  } catch (err) {
+    console.error("Reaction failed:", err);
+    toast('❌ Failed to save reaction. Check connection.');
   }
 }
 
@@ -1445,15 +1457,24 @@ function toggleSave(cardId) {
 const SHARE_APP_URL = 'https://ats-blindspot.github.io/';
 const SHARE_TEXT = 'Everyone sees your blindspots. Except you. 👁';
 
-function openShare(cardId) {
+// SHARE FIX (GLOBAL & NO DOUBLE COUNT)
+async function openShare(cardId) {
   haptic(15);
   try {
     const card = State.cards.find(c => c.id === cardId) || (State.searchCards && State.searchCards.find(c => c.id === cardId));
     if (card) {
-      sb.from('user_behavior').insert({
+      // Count share only when window opens
+      const { error } = await sb.from('user_behavior').insert({
         user_id: State.userId, card_id: card.id, category: card.cat,
         action: 'share', weight: 5
-      }).catch(() => {});
+      });
+      if (!error) {
+        // Update local UI
+        if (!card.reactions) card.reactions = { blown: 0, knew: 0, love: 0, share: 0 };
+        card.reactions.share = (card.reactions.share || 0) + 1;
+        renderFeed();
+        if (State.searchCards && State.searchCards.length > 0) renderSearchFeed();
+      }
     }
   } catch(e) { console.log("Share log error:", e); }
   
@@ -2186,30 +2207,29 @@ function showInstallPopup() {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   if (isStandalone) return;
-  
+
   if (!localStorage.getItem('bs_install_prompted')) {
     document.getElementById('installModal').classList.add('active');
     localStorage.setItem('bs_install_prompted', 'true');
-    
-    if (isIOS) { 
+
+    if (isIOS) {
       document.getElementById('installText').innerHTML = `
         <div style="text-align: left; margin-bottom: 20px;">
           <p style="margin-bottom: 15px;">Add Blindspot to your home screen:</p>
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <span style="font-size: 20px;">1️⃣</span> 
+            <span style="font-size: 20px;">1️⃣</span>
             <span>Tap the Share icon <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#C77DFF" stroke-width="2" style="vertical-align: middle; margin: 0 2px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> below</span>
           </div>
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 20px;">2️⃣</span> 
+            <span style="font-size: 20px;">2️⃣</span>
             <span>Tap 'Add to Home Screen' <span style="font-size: 16px;">➕</span></span>
           </div>
         </div>
-      `; 
-      document.getElementById('installBtn').textContent = "Okay, I Understand"; 
-    }
-    else { 
-      document.getElementById('installText').innerHTML = "Add Blindspot to your home screen for the full app experience."; 
-      document.getElementById('installBtn').textContent = "Install App"; 
+      `;
+      document.getElementById('installBtn').textContent = "Okay, I Understand";
+    } else {
+      document.getElementById('installText').innerHTML = "Add Blindspot to your home screen for the full app experience.";
+      document.getElementById('installBtn').textContent = "Install App";
     }
   }
 }
