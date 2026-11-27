@@ -1,5 +1,5 @@
 // CHANGE THIS VERSION NUMBER EVERY TIME YOU DEPLOY AN UPDATE (e.g., v1.0.2, v1.0.3)
-const CACHE_NAME = 'blindspot-v2.0.6'; 
+const CACHE_NAME = 'blindspot-v3.0.6'; 
 
 const ASSETS = [
   './',
